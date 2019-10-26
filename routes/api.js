@@ -67,13 +67,13 @@ module.exports = function (app) {
       Issue.findOneAndUpdate({ _id: id }, update)
         .then(result => {
           console.log('RESPONSE: ' + JSON.stringify(result))
-          return res.json(result)
+          return res.json({ message: `successfully updated ${id}` })
         })
         .catch(error => {
           if (error) {
             return res
               .status(400)
-              .json({ error: 'Invalid issue id', details: error })
+              .json({ error: `could not update ${id}`, details: error })
           }
         })
     })
@@ -82,10 +82,10 @@ module.exports = function (app) {
         return res.status(400).json({ error: 'Missing Issue id' })
       }
       Issue.deleteOne({ _id: req.body._id })
-        .then(result => res.json(result))
+        .then(result => res.json({ message: `deleted ${req.body._id}` }))
         .catch(error => {
           if (error) {
-            res.status(400).json({ error: 'Issue not found', details: error })
+            res.status(400).json({ error: `could not delete ${req.body._id}` })
           }
         })
     })

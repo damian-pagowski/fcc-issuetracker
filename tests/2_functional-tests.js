@@ -206,7 +206,6 @@ suite('Functional Tests', function () {
         .end(function (err, res) {
           assert.equal(res.status, 400)
           assert.equal(res.body.error, 'Missing Issue id')
-
           done()
         })
     })
@@ -218,8 +217,7 @@ suite('Functional Tests', function () {
         .send({ _id: 667 })
         .end(function (err, res) {
           assert.equal(res.status, 400)
-          assert.equal(res.body.error, 'Issue not found')
-
+          assert.equal(res.body.error, `could not delete 667`)
           done()
         })
     })
@@ -231,7 +229,6 @@ suite('Functional Tests', function () {
         .send({ _id: firstIssueId })
         .end(function (err, res) {
           assert.equal(res.status, 200)
-
           done()
         })
     })
