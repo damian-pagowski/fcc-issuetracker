@@ -2,40 +2,61 @@
 require('dotenv').config()
 
 var express = require('express')
-const helmet = require('helmet')
 const app = express()
+const helmet = require('helmet')
+const sessions = require('client-sessions')
 app.use(helmet())
 var bodyParser = require('body-parser')
 var cors = require('cors')
 const mongoose = require('mongoose')
-mongoose.set('useFindAndModify', false);
+mongoose.set('useFindAndModify', false)
+const User = require('./models/user.js')
 
 var apiRoutes = require('./routes/api.js')
+var authRoutes = require('./routes/auth.js')
+
 var fccTestingRoutes = require('./routes/fcctesting.js')
 var runner = require('./test-runner')
 
 const port = process.env.PORT || 3000
+app.use(
+  sessions({
+    cookieName: 'session',
+    secret: process.env.SECRET,
+    duration: 30 * 60 * 1000
+  })
+)
 app.use('/public', express.static(process.cwd() + '/public'))
 
 app.use(cors({ origin: '*' })) // For FCC testing purposes only
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+app.set('view engine', 'ejs')
 
-// Sample front-end
-app.route('/:project/').get(function (req, res) {
-  res.sendFile(process.cwd() + '/views/issue.html')
-})
+// // Sample front-end
+// app.route('/:project/').get(function (req, res) {
+//   res.sendFile(process.cwd() + '/views/issue.html')
+// })
 
 // Index page (static HTML)
 app.route('/').get(function (req, res) {
-  res.sendFile(process.cwd() + '/views/index.html')
+  if (!(req.session && req.session.userId)) {
+    return res.redirect('/login')
+  }
+  User.findById(req.session.userId).then(data => 
+    // res.sendFile(process.cwd() + '/views/index.html')
+    res.render('index', {user: data.username})
+    
+    ).catch(err => res.render('login'))
 })
 
 // For FCC testing purposes
 fccTestingRoutes(app)
 
 // Routing for API
+
+authRoutes(app)
 apiRoutes(app)
 
 // 404 Not Found Middleware
