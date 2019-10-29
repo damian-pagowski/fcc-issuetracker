@@ -34,21 +34,44 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.set('view engine', 'ejs')
 
-// // Sample front-end
-// app.route('/:project/').get(function (req, res) {
-//   res.sendFile(process.cwd() + '/views/issue.html')
-// })
-
+app.use((req, res, next) => {
+  if (!(req.session && req.session.userId)) {
+    next()
+  }
+  User.findById(req.session.userId)
+    .then(user => {
+      if (!user) {
+        next()
+      } else {
+        user.password = undefined
+        req.user = user
+        res.locals.user = user
+        next()
+      }
+    })
+    .catch(error => next(error))
+})
+// Sample front-end
+app.route('/issues/:project/').get(function (req, res) {
+  res.sendFile(process.cwd() + '/views/issue.html')
+})
+function loginRequired (req, res, next) {
+  if (!req.user) {
+    res.redirect('/login')
+  } else {
+    next()
+  }
+}
 // Index page (static HTML)
-app.route('/').get(function (req, res) {
+app.route('/').get(loginRequired, (req, res, next) => {
   if (!(req.session && req.session.userId)) {
     return res.redirect('/login')
   }
-  User.findById(req.session.userId).then(data => 
-    // res.sendFile(process.cwd() + '/views/index.html')
-    res.render('index', {user: data.username})
-    
-    ).catch(err => res.render('login'))
+  User.findById(req.session.userId)
+    .then(data =>
+      res.render('index', { user: data.username })
+    )
+    .catch(err => res.render('login'))
 })
 
 // For FCC testing purposes

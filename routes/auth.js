@@ -40,7 +40,10 @@ module.exports = function (app) {
             const user = new User(data)
             user
               .save()
-              .then(() => res.redirect('/'))
+              .then(() => {
+                req.session.userId = user._id
+                res.redirect('/')
+              })
               .catch(err =>
                 res.render('register', { error: JSON.stringify(err) })
               )
