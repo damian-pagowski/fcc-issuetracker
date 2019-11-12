@@ -17,7 +17,11 @@ var authRoutes = require('./routes/auth.js')
 
 var fccTestingRoutes = require('./routes/fcctesting.js')
 var runner = require('./test-runner')
+var compression = require('compression')
 
+app.use(compression())
+ 
+ 
 const port = process.env.PORT || 3000
 app.use(
   sessions({

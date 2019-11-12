@@ -220,6 +220,8 @@
         $("#projectTitle").text("All issues for: " + currentProject);
         $.ajax({
           type: "GET",
+          beforeSend: function(xhr){xhr.setRequestHeader('Accept-Encoding', 'gzip');},
+
           url: url,
           success: function(data) {
             var issues = [];

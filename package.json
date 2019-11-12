@@ -13,6 +13,7 @@
 		"chai": "^4.2.0",
 		"chai-http": "^4.3.0",
 		"client-sessions": "^0.8.0",
+		"compression": "^1.7.4",
 		"cors": "^2.8.5",
 		"dotenv": "^8.2.0",
 		"ejs": "^2.7.1",
@@ -21,6 +22,7 @@
 		"mocha": "^6.2.2",
 		"mongodb": "^3.3.3",
 		"mongoose": "^5.7.6",
+		"zlib": "^1.0.5",
 		"zombie": "^6.1.4"
 	},
 	"engines": {
@@ -35,5 +37,8 @@
 		"hyperdev",
 		"express"
 	],
-	"license": "MIT"
+	"license": "MIT",
+	"devDependencies": {
+		"express-swagger-generator": "^1.1.15"
+	}
 }
