@@ -1,27 +1,37 @@
 'use strict'
 require('dotenv').config()
-
-var express = require('express')
+const path = require('path')
+const rfs = require('rotating-file-stream')
+const morgan = require('morgan')
+const express = require('express')
 const app = express()
 const helmet = require('helmet')
 const sessions = require('client-sessions')
 app.use(helmet())
-var bodyParser = require('body-parser')
-var cors = require('cors')
+const bodyParser = require('body-parser')
+const cors = require('cors')
 const mongoose = require('mongoose')
 mongoose.set('useFindAndModify', false)
 const User = require('./models/user.js')
 
-var apiRoutes = require('./routes/api.js')
-var authRoutes = require('./routes/auth.js')
+const apiRoutes = require('./routes/api.js')
+const authRoutes = require('./routes/auth.js')
 
-var fccTestingRoutes = require('./routes/fcctesting.js')
-var runner = require('./test-runner')
-var compression = require('compression')
+const fccTestingRoutes = require('./routes/fcctesting.js')
+const runner = require('./test-runner')
+const compression = require('compression')
 
 app.use(compression())
- 
- 
+
+// create a rotating write stream
+const accessLogStream = rfs('access.log', {
+  interval: '1d', // rolling log
+  path: path.join(__dirname, 'log')
+})
+
+// setup the logger
+app.use(morgan('combined', { stream: accessLogStream }))
+
 const port = process.env.PORT || 3000
 app.use(
   sessions({
@@ -72,9 +82,7 @@ app.route('/').get(loginRequired, (req, res, next) => {
     return res.redirect('/login')
   }
   User.findById(req.session.userId)
-    .then(data =>
-      res.render('index', { user: data.username })
-    )
+    .then(data => res.render('index', { user: data.username }))
     .catch(err => res.render('login'))
 })
 
@@ -86,12 +94,12 @@ fccTestingRoutes(app)
 authRoutes(app)
 apiRoutes(app)
 
-// 404 Not Found Middleware
-app.use(function (req, res, next) {
-  res.status(404).type('text').send('Not Found')
-})
-
 // Start our server and tests!
+
+// 404 Not Found Middleware
+// app.use(function (req, res, next) {
+//   return res.status(404).type('text').send('Not Found')
+// })
 
 const uri = process.env.MONGOLAB_URI
 console.log(`Connecting to database:  ${uri}`)
@@ -104,7 +112,7 @@ app.listen(port, function () {
       try {
         runner.run()
       } catch (e) {
-        var error = e
+        const error = e
         console.log('Tests are not valid:')
         console.log(error)
       }
