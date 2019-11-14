@@ -8,22 +8,18 @@
 
 'use strict'
 const Issue = require('../models/Issue')
-
+const BadRequestError = require('http-errors').BadRequestError
 module.exports = function (app) {
   app
     .route('/api/issues/:project')
-    .get(function (req, res) {
+    .get(function (req, res, next) {
       const project = req.params.project
       const filter = { ...req.query, project }
-      Issue.find(filter).then(result => res.json(result)).catch(error => {
-        if (error) {
-          res
-            .status(400)
-            .json({ error: 'Failed to query for issues', details: error })
-        }
-      })
+      Issue.find(filter)
+        .then(result => res.json(result))
+        .catch(error => next(error))
     })
-    .post(function (req, res) {
+    .post(function (req, res, next) {
       const project = req.params.project
       if (!project) {
         return res.json({
@@ -37,25 +33,12 @@ module.exports = function (app) {
         .then(data => {
           res.json(data)
         })
-        .catch(error => {
-          if (error) {
-            console.log(
-              'ERROR - Issue not saved to DB: ' + JSON.stringify(error)
-            )
-            return res.status(400).json({
-              error: 'Failed to create Issue',
-              details: error.errors
-            })
-          }
-        })
+        .catch(error => next(error))
     })
-    .put(function (req, res) {
+    .put(function (req, res, next) {
       const id = req.body._id
       if (!id) {
-        return res.status(400).json({
-          error: 'Failed to Update Issue',
-          details: 'missing issue id'
-        })
+        throw new BadRequestError('Missing Id')
       }
       if (!req.body) {
         return res.status(400).json({
@@ -66,30 +49,18 @@ module.exports = function (app) {
       const update = prepareUpdate(req.body)
       Issue.findOneAndUpdate({ _id: id }, update)
         .then(result => {
-          console.log('RESPONSE: ' + JSON.stringify(result))
           return res.json({ message: `successfully updated ${id}` })
         })
-        .catch(error => {
-          if (error) {
-            return res
-              .status(400)
-              .json({ error: `could not update ${id}`, details: error })
-          }
-        })
+        .catch(error => next(error))
     })
-    .delete(function (req, res) {
+    .delete(function (req, res, next) {
       if (!req.body._id) {
         return res.status(400).json({ error: 'Missing Issue id' })
       }
       Issue.deleteOne({ _id: req.body._id })
         .then(result => res.json({ message: `deleted ${req.body._id}` }))
-        .catch(error => {
-          if (error) {
-            res.status(400).json({ error: `could not delete ${req.body._id}` })
-          }
-        })
+        .catch(error => next(error))
     })
- 
 }
 
 function prepareUpdate (obj) {

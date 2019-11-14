@@ -19,10 +19,12 @@
 		"ejs": "^2.7.1",
 		"express": "^4.17.1",
 		"helmet": "^3.21.2",
+		"http-errors": "^1.7.3",
 		"mocha": "^6.2.2",
 		"mongodb": "^3.3.3",
 		"mongoose": "^5.7.6",
 		"morgan": "^1.9.1",
+		"morgan-body": "^2.4.8",
 		"rotating-file-stream": "^1.4.6",
 		"zlib": "^1.0.5",
 		"zombie": "^6.1.4"

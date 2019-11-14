@@ -1,8 +1,11 @@
 'use strict'
 require('dotenv').config()
+const BadRequestError = require('http-errors').BadRequestError
 const path = require('path')
 const rfs = require('rotating-file-stream')
 const morgan = require('morgan')
+const morganBody = require('morgan-body')
+
 const express = require('express')
 const app = express()
 const helmet = require('helmet')
@@ -31,6 +34,7 @@ const accessLogStream = rfs('access.log', {
 
 // setup the logger
 app.use(morgan('combined', { stream: accessLogStream }))
+morganBody(app)
 
 const port = process.env.PORT || 3000
 app.use(
@@ -90,16 +94,33 @@ app.route('/').get(loginRequired, (req, res, next) => {
 fccTestingRoutes(app)
 
 // Routing for API
+app.use((err, req, res, next) => {
+  handleError(err, res)
+})
 
 authRoutes(app)
 apiRoutes(app)
 
-// Start our server and tests!
+app.use(function (err, req, res, next) {
+  console.log('ERROR: ' + JSON.stringify(err))
+  if (err == BadRequestError) {
+    res.status(400)
+    return res.send(err.message)
+  } else {
+    res.status(500)
 
-// 404 Not Found Middleware
-// app.use(function (req, res, next) {
-//   return res.status(404).type('text').send('Not Found')
-// })
+    return res.send(err.message)
+  }
+})
+
+const handleError = (err, res) => {
+  const { statusCode, message } = err
+  res.status(statusCode).json({
+    status: 'error',
+    statusCode,
+    message
+  })
+}
 
 const uri = process.env.MONGOLAB_URI
 console.log(`Connecting to database:  ${uri}`)
